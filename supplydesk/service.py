@@ -4,6 +4,14 @@ from supplydesk.storage import JsonStore
 
 
 class OrderService:
+    MIN_QUANTITY = 1
+    MAX_QUANTITY = 99
+    STUDENT_DISCOUNT_THRESHOLD = 5000
+    STUDENT_DISCOUNT_PERCENT = 10
+    ROUNDING_ADJUSTMENT = 50
+    DELIVERY_DISCOUNT_THRESHOLD = 10000
+    DELIVERY_COST = 600
+
     def __init__(self, state_path=".supplydesk/state.json"):
         self.store = JsonStore(state_path)
 
@@ -31,7 +39,7 @@ class OrderService:
             if product is None:
                 raise ValueError("Unknown product.")
             quantity = item.get("quantity")
-            if type(quantity) is not int or quantity < 1 or quantity > 99:
+            if type(quantity) is not int or quantity < self.MIN_QUANTITY or quantity > self.MAX_QUANTITY:
                 raise ValueError("Quantity must be an integer from 1 to 99.")
             if quantity > product["stock"]:
                 raise ValueError("Not enough stock for " + product["product_id"] + ".")
@@ -45,11 +53,11 @@ class OrderService:
                 "line_total_cents": line_total,
             })
         discount = 0
-        if customer_type == "student" and subtotal > 5000:
-            discount = (subtotal * 10 + 50) // 100
+        if customer_type == "student" and subtotal >= self.STUDENT_DISCOUNT_THRESHOLD:
+            discount = (subtotal * self.STUDENT_DISCOUNT_PERCENT + self.ROUNDING_ADJUSTMENT) // 100
         delivery = 0
-        if fulfillment == "delivery" and subtotal - discount < 10000:
-            delivery = 600
+        if fulfillment == "delivery" and subtotal - discount < self.DELIVERY_DISCOUNT_THRESHOLD:
+            delivery = self.DELIVERY_COST
         return {
             "customer_type": customer_type,
             "fulfillment": fulfillment,
@@ -81,7 +89,7 @@ class OrderService:
             if product is None:
                 raise ValueError("Unknown product.")
             quantity = item.get("quantity")
-            if type(quantity) is not int or quantity < 1 or quantity > 99:
+            if type(quantity) is not int or quantity < self.MIN_QUANTITY or quantity > self.MAX_QUANTITY:
                 raise ValueError("Quantity must be an integer from 1 to 99.")
             if quantity > product["stock"]:
                 raise ValueError("Not enough stock for " + product["product_id"] + ".")
@@ -95,11 +103,11 @@ class OrderService:
                 "line_total_cents": line_total,
             })
         discount = 0
-        if customer_type == "student" and subtotal > 5000:
-            discount = (subtotal * 10 + 50) // 100
+        if customer_type == "student" and subtotal >= self.STUDENT_DISCOUNT_THRESHOLD:
+            discount = (subtotal * self.STUDENT_DISCOUNT_PERCENT + self.ROUNDING_ADJUSTMENT) // 100
         delivery = 0
-        if fulfillment == "delivery" and subtotal - discount < 10000:
-            delivery = 600
+        if fulfillment == "delivery" and subtotal - discount < self.DELIVERY_DISCOUNT_THRESHOLD:
+            delivery = self.DELIVERY_COST
         order = {
             "order_id": "ORD-" + str(state["next_order_number"]).zfill(4),
             "status": "placed",
