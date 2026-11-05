@@ -40,6 +40,26 @@ class OrderSmokeTests(unittest.TestCase):
         self.assertEqual(cancelled["status"], "cancelled")
         self.assertEqual(self.service.catalog(), before)
 
+    def test_remove_stock_on_successful_order(self):
+        before = self.service.catalog()
+        order = self.service.place_order("regular", [{"product_id": "notebook", "quantity": 4}])
+        after = self.service.catalog()
+        self.assertEqual(after[0]["stock"], before[0]["stock"] - 4)
+
+    def test_student_gets_discount_at_threshold_exactly(self):
+        order = self.service.place_order("student", [{"product_id": "notebook", "quantity": 4}, {"product_id": "mug", "quantity": 2}])
+        self.assertEqual(order["subtotal_cents"], 5000)
+        self.assertEqual(order["discount_cents"], 500)
+
+    def test_customer_type_is_not_accepted_if_invalid(self):
+        with self.assertRaises(ValueError):
+            self.service.quote("NotRegularOrStudent", [{"product_id": "pen-pack", "quantity": 3}])
+
+    def test_quotes_do_not_change_stock(self):
+        before = self.service.catalog()
+        self.service.quote("regular", [{"product_id": "bag", "quantity": 2}])
+        after = self.service.catalog()
+        self.assertEqual(before, after)
 
 if __name__ == "__main__":
     unittest.main()
