@@ -61,5 +61,35 @@ class OrderSmokeTests(unittest.TestCase):
         after = self.service.catalog()
         self.assertEqual(before, after)
 
+    def test_express_for_regular_customer_quote(self):
+        quote = self.service.quote("regular", [{"product_id": "hoodie", "quantity": 1}], "express")
+        self.assertEqual(quote["subtotal_cents"], 4000)
+        self.assertEqual(quote["discount_cents"], 0)
+        self.assertEqual(quote["delivery_cents"], 1200)
+        self.assertEqual(quote["total_cents"], 5200)
+
+    def test_express_for_student_customer_quote(self):
+        quote = self.service.quote("student", [{"product_id": "bag", "quantity": 2}], "express")
+        self.assertEqual(quote["subtotal_cents"], 5000)
+        self.assertEqual(quote["discount_cents"], 500)
+        self.assertEqual(quote["delivery_cents"], 1200)
+        self.assertEqual(quote["total_cents"], 5700)
+
+    def test_express_fee_is_not_waived(self):
+        order = self.service.place_order("regular", [{"product_id": "hoodie", "quantity": 2}, {"product_id": "mug", "quantity": 2}], "express")
+        self.assertEqual(order["subtotal_cents"], 11000)
+        self.assertEqual(order["delivery_cents"], 1200)
+        self.assertEqual(order["total_cents"], 12200)
+
+    def test_express_order_cancellations_preserves_data(self):
+        order = self.service.place_order("student", [{"product_id": "bag", "quantity": 3}], "express")
+        cancelled_order = self.service.cancel_order(order["order_id"])
+        self.assertEqual(cancelled_order["status"], "cancelled")
+        self.assertEqual(cancelled_order["fulfillment"], "express")
+        self.assertEqual(cancelled_order["delivery_cents"], 1200)
+        self.assertEqual(cancelled_order["discount_cents"], 750)
+        self.assertEqual(cancelled_order["total_cents"], 7950)
+
+
 if __name__ == "__main__":
     unittest.main()

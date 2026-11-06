@@ -57,7 +57,7 @@ place_order(customer_type, items, fulfillment="pickup")
 Both operations require:
 
 - Customer type: exactly `regular` or `student`.
-- Fulfillment: exactly `pickup` or `delivery`.
+- Fulfillment: exactly `pickup` or `delivery` or `express`.
 - Items: a nonempty list of dictionaries, each containing `product_id` and `quantity`.
 - A valid product ID for every item.
 - An integer quantity from 1 through 99 inclusive for each item. Booleans, fractional numbers, and numeric strings are not valid quantities when calling the service directly.
